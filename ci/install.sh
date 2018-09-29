@@ -18,7 +18,7 @@ if [ ! -e "${BOTAN_INSTALL}/lib/libbotan-2.so" ] && \
 
   git clone --depth 1 https://github.com/randombit/botan "${botan_build}"
   pushd "${botan_build}"
-  ./configure.py --prefix="${BOTAN_INSTALL}" --with-debug-info --cxxflags="-fno-omit-frame-pointer"
+  ./configure.py --prefix="${BOTAN_INSTALL}" --with-debug-info --cxxflags="-fno-omit-frame-pointer" --enable-modules=bzip2,zlib,openssl
   ${MAKE} -j${CORES} install
   popd
 fi
@@ -260,11 +260,3 @@ if [ ! -e "${GPG_INSTALL}/bin/gpg" ]; then
   fi
 fi
 
-# ruby-rnp
-if [ ! -e "${RUBY_RNP_INSTALL}/Gemfile" ]; then
-  git clone --depth 1 --branch "$RUBY_RNP_VERSION" https://github.com/riboseinc/ruby-rnp "$RUBY_RNP_INSTALL"
-  pushd "$RUBY_RNP_INSTALL"
-  gem install bundler
-  bundle install --path .
-  popd
-fi

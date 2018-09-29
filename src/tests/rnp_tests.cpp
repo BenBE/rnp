@@ -132,6 +132,7 @@ main(int argc, char *argv[])
     }
 
     struct CMUnitTest tests[] = {
+#if 0
       cmocka_unit_test(hash_test_success),
       cmocka_unit_test(cipher_test_success),
       cmocka_unit_test(pkcs1_rsa_test_success),
@@ -209,7 +210,9 @@ main(int argc, char *argv[])
       cmocka_unit_test(test_ffi_signatures),
       cmocka_unit_test(test_ffi_load_keys),
       cmocka_unit_test(test_ffi_save_keys),
+#endif
       cmocka_unit_test(test_ffi_key_to_json),
+#if 0
       cmocka_unit_test(test_ffi_key_iter),
       cmocka_unit_test(test_ffi_locate_key),
       cmocka_unit_test(test_ffi_signatures_detached_memory_g10),
@@ -218,6 +221,7 @@ main(int argc, char *argv[])
       cmocka_unit_test(test_ffi_key_export),
       cmocka_unit_test(test_cli_rnp),
       cmocka_unit_test(test_cli_rnp_keyfile)
+#endif
     };
 
     /* Each test entry will invoke setup_test before running
