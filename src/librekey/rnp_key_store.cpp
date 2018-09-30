@@ -695,8 +695,9 @@ rnp_key_store_add_key(rnp_key_store_t *keyring, pgp_key_t *srckey)
 
         /* validate/re-validate all subkeys as well */
         if (pgp_key_is_primary_key(added_key)) {
-            for (list_item *grip = list_front(added_key->subkey_grips); grip; grip = list_next(grip)) {
-                pgp_key_t *subkey = rnp_key_store_get_key_by_grip(keyring, (uint8_t*) grip);
+            for (list_item *grip = list_front(added_key->subkey_grips); grip;
+                 grip = list_next(grip)) {
+                pgp_key_t *subkey = rnp_key_store_get_key_by_grip(keyring, (uint8_t *) grip);
                 if (subkey) {
                     subkey->valid = true;
                     subkey->valid = !validate_pgp_key(subkey, keyring);
@@ -1041,9 +1042,9 @@ rnp_key_store_get_key_by_name(const rnp_key_store_t *keyring,
 static void
 grip_hash_mpi(pgp_hash_t *hash, const pgp_mpi_t *val, const char name)
 {
-    size_t  len;
-    size_t  idx;
-    char buf[20] = {0};
+    size_t len;
+    size_t idx;
+    char   buf[20] = {0};
 
     len = mpi_bytes(val);
     for (idx = 0; (idx < len) && (val->mpi[idx] == 0); idx++)
@@ -1076,7 +1077,33 @@ grip_hash_mpi(pgp_hash_t *hash, const pgp_mpi_t *val, const char name)
     }
 }
 
-/* keygrip is subjectKeyHash from pkcs#15. */
+static bool
+grip_hash_ec(pgp_hash_t *hash, const pgp_ec_key_t *key)
+{
+    const ec_curve_desc_t *desc = get_curve_desc(key->curve);
+
+    if (!desc) {
+        RNP_LOG("unknown curve %d", (int) key->curve);
+        return false;
+    }
+
+    switch (key->curve) {
+    default:
+        RNP_LOG("unsupported curve: %d", (int) key->curve);
+        return false;
+    }
+
+    /*PGP_CURVE_NIST_P_256,
+    PGP_CURVE_NIST_P_384,
+    PGP_CURVE_NIST_P_521,
+    PGP_CURVE_ED25519,
+
+    PGP_CURVE_SM2_P_256,
+    grip_hash_mpi(&hash, &key->ec.p, 'p');
+    */
+}
+
+/* keygrip is subjectKeyHash from pkcs#15 for RSA. */
 bool
 rnp_key_store_get_key_grip(const pgp_key_material_t *key, uint8_t *grip)
 {
@@ -1111,7 +1138,10 @@ rnp_key_store_get_key_grip(const pgp_key_material_t *key, uint8_t *grip)
     case PGP_PKA_ECDSA:
     case PGP_PKA_EDDSA:
     case PGP_PKA_SM2:
-        grip_hash_mpi(&hash, &key->ec.p, 'p');
+        if (!grip_hash_ec(&hash, &key->ec)) {
+            pgp_hash_finish(&hash, grip);
+            return false;
+        }
         break;
 
     default:
